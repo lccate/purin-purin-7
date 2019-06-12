@@ -116,6 +116,7 @@ int main()
 ```
 ### 析构函数
 构造函数在内存中出现时被自动调用，在内存中销毁时会自动调用析构函数  
+构造函数可以有多个，但析构函数只能有一个且没有参数  
 ```
 //文件名：file2
 //作  者：lccate
@@ -156,6 +157,7 @@ A,20
 ~A,20
 ~A,10
 ```
+
 ### 如何在调用main函数之前就执行一段代码？
 ```
 #include <stdio.h>
@@ -217,3 +219,225 @@ int main()
 	return 0;
 }
 ```
+### 类与结构体的区别
+```
+#include <stdio.h>
+#include <string.h>
+
+struct man
+{
+	char *name;
+	int age;
+
+
+	void set_name(const char *name)
+	{
+		this->name = new char[strlen(name)+1];
+		strcpy(this->name, name);
+	}
+
+	const char *get_name()
+	{
+		return name;
+	}
+
+	~man()
+	{
+		delete []name;
+	}
+};
+
+int main()
+{
+	man m;
+	m.set_name("dqwwbfiuqbeoifcboqri");
+	//m.set_name("aa");//如果加上这一句编译不出错但是实际会导致内存泄漏
+	printf("%s\n", m.get_name());
+	return 0;
+}
+```
+改进版：  
+```
+//文件名：file4
+//作  者：lccate
+//时  间：2019.6
+//描  述：
+
+#include <stdio.h>
+#include <string.h>
+
+struct man
+{
+	char *name;
+	int age;
+
+	man()
+	{
+		name = NULL;
+	}
+
+	void set_name(const char *name)
+	{
+		if(name)
+			delete []this->name;
+		this->name = new char[strlen(name)+1];
+		strcpy(this->name, name);
+	}
+
+	const char *get_name()
+	{
+		if (name)
+			return name;
+		else
+			return "nothing";
+	}
+
+	~man()
+	{
+		if (name)
+			delete []name;
+	}
+};
+
+int main()
+{
+	man m;
+	m.set_name("dqwwbfiuqbeoifcboqri");
+	m.set_name("aa");//如果加上这一句编译不出错但是实际会导致内存泄漏
+	printf("%s\n", m.get_name());
+	return 0;
+}
+```
+将上述代码结构体转化为类：  
+```
+#include <stdio.h>
+#include <string.h>
+
+class man
+{
+public:
+	char *name;
+	int age;
+
+	man()
+	{
+		name = NULL;
+	}
+
+	void set_name(const char *name)
+	{
+		if(name)
+			delete []this->name;
+		this->name = new char[strlen(name)+1];
+		strcpy(this->name, name);
+	}
+
+	const char *get_name()
+	{
+		if (name)
+			return name;
+		else
+			return "nothing";
+	}
+
+	int get_age() //公有方法get_age
+	{
+		return age;
+	}
+
+	~man()
+	{
+		if (name)
+			delete []name;
+	}
+private:
+	int age;
+};
+
+int main()
+{
+	man m;
+	m.set_name("dqwwbfiuqbeoifcboqri");
+	m.set_name("aa");//如果加上这一句编译不出错但是实际会导致内存泄漏
+	printf("%s\n", m.get_name());
+	//printf("%d\n", m.age);//age为私有成员，在类外不可访问,但是在类中public部分增加了公有方法get_age后就可以访问到
+
+	return 0;
+}
+```
+在c++中，结构体的所有成员都是公有的，外部可以访问，但是类（class）中的所有成员都是私有的，外部不能访问，如果要外部能访问，需要标识public  
+上述代码中，age为私有成员，在类外不可访问,但是在类中public部分增加了公有方法get_age后就可以访问到（python中也有类似的地方）  
+```
+#include <stdio.h>
+#include <string.h>
+
+class man
+{
+private:
+	char *name;
+	int age;
+public:
+	man()
+	{
+		name = NULL; //c++中，一般会在类的内部进行初始化
+		age = 0;
+	}
+
+	~man()
+	{
+		if(name)
+			delete []name;
+	}
+
+	const char *get_name()
+	{
+		return name;
+	}
+
+	int get_age()
+	{
+		return age;
+	}
+
+	void set_name(const char *name)
+	{
+		if(strcmp(name,"张三")==0) //在public中增加了限制条件，就能够限制用户的输入，增强代码的健壮性
+			return;
+		if(this->name)
+			delete []this->name;
+		this->name = new char[strlen(name)+1];
+		strcpy(this->name, name);
+	}
+
+	void set_age(int age)
+	{
+		this->age = age;
+	}
+};
+
+int main()
+{
+	man m;
+	char name[100];
+	scanf("%s",name);
+	int age = 0;
+	scanf("%d",&age);
+	m.set_name(name);
+	m.set_age(age);
+	printf("%s, %d\n", m.get_age(), m.get_name());
+	return 0;
+}
+```
+为什么要采用类public、private这种方式编写代码？c++的特点，使代码具有健壮性  
+类的继承：与python道理一样  
+## 一个简单的MFC例子  
+
+
+
+
+
+
+
+
+
+
