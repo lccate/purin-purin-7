@@ -431,13 +431,153 @@ int main()
 为什么要采用类public、private这种方式编写代码？c++的特点，使代码具有健壮性  
 类的继承：与python道理一样  
 ## 一个简单的MFC例子  
+### 基本流程
+新建MFC应用程序，从工具箱往面板上放置button，并双击编写相应的代码，在属性栏中可以修改属性  
+```
+void Cmfc_demoDlg::OnBnClickedButton1()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	UpdateData(TRUE);//把用户在控件里面输入的值和变量对应起来
+	c = a+b;
+	UpdateData(FALSE);//显示变量c的值
+}
+```
+修改属性中的Disabled为True，则按钮变灰，无法使用，但是可以对按钮进行破解  
+### 破解按钮 
+windows的窗口都有句柄，窗口里的控件也一样有句柄，打开vs的工具spy++的望远镜进行刺探  
+小插曲：  
+1 [关闭MFC项目后再次打开找不到按钮视图解决方法](https://blog.csdn.net/wzg31796/article/details/51531279)  
+2 选择窗口-重置窗口布局，即可恢复默认的窗口布局  
+由spy++得到按钮句柄为000B06E0（16进制），给此句柄发送一个鼠标左键按下抬起的消息  
+```
+#include <windows.h>
 
+int main()
+{
+	Sleep(3000);//3s延迟
+	SendMessage((HWND)0x001A06D6, WM_LBUTTONDOWN,0,0);//向指定句柄发送一个鼠标按下的消息
+	SendMessage((HWND)0x001A06D6, WM_LBUTTONUP,0,0);//鼠标抬起
+	return 0;
+}
+```
+### MFC版的ide
+1 创建名为ide的MFC，插入编辑框并删除多余的按钮，修改编辑框的multiline为true，want return属性为true（可以输入多行数据）  
+[!图1](1.png)  
+2 增加滚动条，将vertical scroll和horizotal scroll都改为true  
+3 令编辑框和窗口一起变大变小：选中编辑框添加变量，类别为control，在cpp文件中添加代码  
+```
+	else
+	{
+		CRect rect;
+		GetClientRect(&rect);
+		edit1.SetWindowPos(NULL, 0 ,0,rect.Width(),rect.Height(),0);
+		CDialogEx::OnPaint();
+	}
+}
+```
+4 添加菜单：在资源文件中添加资源，添加menu，更改对话框属性Menu  
+[!图2](2.png)  
+5 接下来对菜单栏的功能进行补充  
+文件-退出：退出右键，添加事件处理程序，类列表选择idedlg，在生成的构架下添加代码  
+[!图3](3.png)  
+```
+void CideDlg::On32779()//退出菜单的对应执行函数
+{
+	// TODO: 在此添加命令处理程序代码
+	CDialogEx::OnCancel();
+}
+```
+帮助-关于：步骤同上，添加代码  
+[!图4](4.png)  
+```
 
+void CideDlg::On32783()
+{
+	// TODO: 在此添加命令处理程序代码
+	CAboutDlg dlgAbout;
+	dlgAbout.DoModal();
+}
+```
+文件-打开：步骤同上，添加代码完成以下功能：打开文件夹；判断是确定还是取消；读入文件内容；读入文件内容时显示换行内容  
+```
+void CideDlg::On32777()
+{
+	// TODO: 在此添加命令处理程序代码
+	CFileDialog cf(TRUE);//MFC提供的一个类，功能是弹出一个文件打开对话框
+	if(cf.DoModal() == IDOK)//判断用户打开文件时按下的是确定
+	{
+		CString cs;//MFC提供的字符串类
+		//需要把宽码格式的字符串转化为GBK格式的字符串
+		cs = cf.GetPathName();
+		MessageBox(cs);//弹出一个对话框，对话框里显示这个字符串
+		CStringA file_name(cs);//调用cstringA的构造函数将宽码字符串转化为ascii码字符串，ASCII码也是gbk格式的
+		FILE *p = fopen(file_name.GetBuffer(), "r");
+		CStringA content;//存放文件内容
+		if (p)
+		{
+			while(!feof(p))
+			{
+				char buf[1024] = {0};
+				fgets(buf,sizeof(buf),p);//读一行  
+				content += buf;//字符串追加
+				content += "\r\n";
+			}
+			fclose(p);
+			CString con;
+			con = content;//转化宽码
+			edit1.SetWindowText(con);
+		}
+	}
+	//如果是取消则什么都不做
+}
+```
+文件-保存：与文件打开类似  
+```
+void CideDlg::On32778()
+{
+	// TODO: 在此添加命令处理程序代码
+		CFileDialog cf(FALSE);//MFC提供的一个类，功能是弹出一个文件保存对话框
+	if(cf.DoModal() == IDOK)//判断用户打开文件时按下的是确定
+	{
+		CString cs;//MFC提供的字符串类
+		//需要把宽码格式的字符串转化为GBK格式的字符串
+		cs = cf.GetPathName();
+		//MessageBox(cs);//弹出一个对话框，对话框里显示这个字符串
+		CString con;
 
-
-
-
-
+		edit1.GetWindowText(con);//将用户在edit中输入的内容放入变量con
+		CStringA content(con);
+		CStringA file_name(cs);
+		FILE *p = fopen(file_name.GetBuffer(),"w");
+		fputs(content.GetBuffer(),p);
+		fclose(p);
+	}
+}
+```
+编辑-拷贝：  
+```
+void CideDlg::On32780()
+{
+	// TODO: 在此添加命令处理程序代码
+	edit1.Copy();
+}
+```
+编辑-粘贴：  
+```
+void CideDlg::On32785()
+{
+	// TODO: 在此添加命令处理程序代码
+	edit1.Paste();
+}
+```
+编辑-剪切：  
+```
+void CideDlg::On32781()
+{
+	// TODO: 在此添加命令处理程序代码
+	edit1.Cut();
+}
+```
 
 
 
