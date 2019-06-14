@@ -462,7 +462,7 @@ int main()
 ```
 ### MFC版的ide
 1 创建名为ide的MFC，插入编辑框并删除多余的按钮，修改编辑框的multiline为true，want return属性为true（可以输入多行数据）  
-[!图1](1.png)  
+![图1](1.png)  
 2 增加滚动条，将vertical scroll和horizotal scroll都改为true  
 3 令编辑框和窗口一起变大变小：选中编辑框添加变量，类别为control，在cpp文件中添加代码  
 ```
@@ -476,10 +476,10 @@ int main()
 }
 ```
 4 添加菜单：在资源文件中添加资源，添加menu，更改对话框属性Menu  
-[!图2](2.png)  
+![图2](2.png)  
 5 接下来对菜单栏的功能进行补充  
 文件-退出：退出右键，添加事件处理程序，类列表选择idedlg，在生成的构架下添加代码  
-[!图3](3.png)  
+![图3](3.png)  
 ```
 void CideDlg::On32779()//退出菜单的对应执行函数
 {
@@ -488,7 +488,7 @@ void CideDlg::On32779()//退出菜单的对应执行函数
 }
 ```
 帮助-关于：步骤同上，添加代码  
-[!图4](4.png)  
+![图4](4.png)  
 ```
 
 void CideDlg::On32783()
